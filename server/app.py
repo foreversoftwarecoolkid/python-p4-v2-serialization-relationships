@@ -1,22 +1,23 @@
-# server/app.py
 from flask import Flask, make_response
 from flask_migrate import Migrate
-
-from models import db, Zookeeper, Enclosure, Animal
+from sqlalchemy_serializer import SerializerMixin
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Initialize db before importing models
+from flask_sqlalchemy import SQLAlchemy
+db = SQLAlchemy(app)
+
+# Now that db is defined, import the models
+from models import Zookeeper, Enclosure, Animal
+
 migrate = Migrate(app, db)
-
-db.init_app(app)
-
 
 @app.route('/')
 def index():
     return '<h1>Zoo app</h1>'
-
 
 @app.route('/animal/<int:id>')
 def animal_by_id(id):
@@ -29,7 +30,6 @@ def animal_by_id(id):
     response_body += f'<ul>Enclosure: {animal.enclosure.environment}</ul>'
 
     return make_response(response_body)
-
 
 @app.route('/zookeeper/<int:id>')
 def zookeeper_by_id(id):
@@ -44,7 +44,6 @@ def zookeeper_by_id(id):
 
     return make_response(response_body)
 
-
 @app.route('/enclosure/<int:id>')
 def enclosure_by_id(id):
     enclosure = Enclosure.query.filter(Enclosure.id == id).first()
@@ -57,7 +56,6 @@ def enclosure_by_id(id):
         response_body += f'<ul>Animal: {animal.name}</ul>'
 
     return make_response(response_body)
-
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
